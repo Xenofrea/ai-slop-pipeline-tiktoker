@@ -1,0 +1,82 @@
+[
+  {
+    "name": "Реалистичный кинематографический",
+    "prompt": "photorealistic, cinematic lighting, dramatic composition, film grain, high quality, 4k"
+  },
+  {
+    "name": "Аниме стиль",
+    "prompt": "anime style, vibrant colors, Studio Ghibli aesthetic, cel shaded, detailed illustration"
+  },
+  {
+    "name": "Киберпанк",
+    "prompt": "cyberpunk aesthetic, neon lights, futuristic cityscape, dark atmosphere, high contrast"
+  },
+  {
+    "name": "Масляная живопись",
+    "prompt": "oil painting, impressionist style, soft brushstrokes, artistic, painterly effect"
+  },
+  {
+    "name": "Минимализм",
+    "prompt": "minimalist, clean lines, pastel colors, simple composition, modern aesthetic"
+  },
+  {
+    "name": "Ретро 80-х",
+    "prompt": "1980s aesthetic, vintage VHS quality, retro colors, synthwave vibes, nostalgic film look"
+  },
+  {
+    "name": "Нуар",
+    "prompt": "film noir style, black and white, high contrast, dramatic shadows, moody lighting, detective aesthetic"
+  },
+  {
+    "name": "Пиксельная графика",
+    "prompt": "pixel art, 16-bit style, retro gaming aesthetic, pixelated, vibrant colors, nostalgic"
+  },
+  {
+    "name": "Акварель",
+    "prompt": "watercolor painting, soft colors, artistic blur, transparent layers, delicate texture"
+  },
+  {
+    "name": "Комикс Marvel",
+    "prompt": "comic book style, bold outlines, halftone shading, dynamic action, superhero aesthetic, vibrant colors"
+  },
+  {
+    "name": "Steampunk",
+    "prompt": "steampunk aesthetic, Victorian era, brass mechanisms, gears and cogs, industrial, vintage machinery"
+  },
+  {
+    "name": "Фэнтези",
+    "prompt": "fantasy art, magical atmosphere, epic landscape, mystical lighting, detailed environment, heroic composition"
+  },
+  {
+    "name": "Хоррор",
+    "prompt": "horror aesthetic, dark atmosphere, eerie lighting, unsettling mood, dramatic shadows, suspenseful"
+  },
+  {
+    "name": "Научная фантастика",
+    "prompt": "sci-fi aesthetic, futuristic technology, space opera, advanced civilization, metallic surfaces, holographic elements"
+  },
+  {
+    "name": "Пастельная мечта",
+    "prompt": "dreamy pastel colors, soft focus, ethereal atmosphere, gentle lighting, whimsical, romantic"
+  },
+  {
+    "name": "Граффити",
+    "prompt": "street art style, graffiti aesthetic, urban culture, spray paint effect, bold colors, expressive"
+  },
+  {
+    "name": "Noir Cyberpunk",
+    "prompt": "dark cyberpunk, noir aesthetic, rain-soaked streets, neon reflections, moody atmosphere, futuristic detective"
+  },
+  {
+    "name": "Винтажная открытка",
+    "prompt": "vintage postcard style, retro colors, nostalgic atmosphere, aged paper texture, classic composition"
+  },
+  {
+    "name": "Дисней классика",
+    "prompt": "classic Disney animation style, hand-drawn aesthetic, vibrant colors, expressive characters, magical atmosphere"
+  },
+  {
+    "name": "Документальный",
+    "prompt": "documentary photography style, natural lighting, authentic moment, journalistic, real-life atmosphere"
+  }
+]
