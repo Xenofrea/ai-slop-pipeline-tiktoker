@@ -19,40 +19,41 @@ export class TextGeneratorClient {
       ? (process.env.OPENROUTER_MODEL_FREE || 'x-ai/grok-4.1-fast:free')
       : (process.env.OPENROUTER_MODEL || 'openai/chagpt');
 
-    console.log(`📝 Используется модель текста: ${this.model}${useFreeModel ? ' (FREE)' : ''}`);
+    console.log(`📝 Using text model: ${this.model}${useFreeModel ? ' (FREE)' : ''}`);
   }
 
   async generateStoryVariants(description: string, duration: number = 60): Promise<TextGenerationResult[]> {
     const startTime = Date.now();
 
     console.log('\n' + '='.repeat(60));
-    console.log('📝  ГЕНЕРАЦИЯ ВАРИАНТОВ ТЕКСТА');
+    console.log('📝  TEXT VARIANT GENERATION');
     console.log('='.repeat(60));
-    console.log('📥 Описание:', description);
-    console.log('⏱️  Длительность:', duration, 'секунд');
+    console.log('📥 Description:', description);
+    console.log('⏱️  Duration:', duration, 'seconds');
 
-    // Расчет количества слов (150 слов в минуту)
+    // Calculate word count (150 words per minute)
     const wordsCount = Math.floor((duration / 60) * 150);
 
-    const systemPrompt = `Ты - креативный сценарист для коротких видео.
-Твоя задача - создать увлекательный текст для ${duration}-секундного видео на основе описания пользователя.
+    const systemPrompt = `You are a creative screenwriter for short videos.
+Your task is to create an engaging story for a ${duration}-second video based on the user's description.
 
-ТРЕБОВАНИЯ:
-- Текст должен быть рассчитан примерно на ${duration} секунд озвучки (около ${wordsCount} слов)
-- Текст должен быть динамичным, интересным и подходить для короткого видео
-- Используй яркие визуальные образы, которые легко передать в видео
-- Текст должен быть связным и иметь четкую структуру
-- Используй драматургию: завязка, развитие, кульминация, развязка
+REQUIREMENTS:
+- The text should be approximately ${duration} seconds of narration (about ${wordsCount} words)
+- The text should be dynamic, interesting, and suitable for a short video
+- Use vivid visual imagery that can be easily conveyed in video
+- The text should be coherent and have a clear structure
+- Use dramatic structure: exposition, rising action, climax, resolution
+- Write the story in English
 
-ФОРМАТ ОТВЕТА:
-Верни только чистый текст истории, без дополнительных пояснений или разметки.`;
+RESPONSE FORMAT:
+Return only the clean story text, without additional explanations or markup.`;
 
-    console.log('\n🚀 ПАРАЛЛЕЛЬНАЯ генерация 3 вариантов...');
+    console.log('\n🚀 PARALLEL generation of 3 variants...');
 
-    // Генерируем все варианты параллельно
+    // Generate all variants in parallel
     const variantPromises = [0, 1, 2].map(async (i) => {
       const variantStart = Date.now();
-      console.log(`🔄 Запуск генерации варианта ${i + 1}/3...`);
+      console.log(`🔄 Starting variant ${i + 1}/3 generation...`);
 
       const response = await this.client.chat.completions.create({
         model: this.model,
@@ -64,7 +65,7 @@ export class TextGeneratorClient {
       const text = response.choices[0]?.message?.content?.trim() || '';
       const variantTime = ((Date.now() - variantStart) / 1000).toFixed(1);
 
-      console.log(`✅ Вариант ${i + 1} сгенерирован (${text.length} символов) - ${variantTime}s`);
+      console.log(`✅ Variant ${i + 1} generated (${text.length} characters) - ${variantTime}s`);
 
       return {
         text,
@@ -75,8 +76,8 @@ export class TextGeneratorClient {
     const variants = await Promise.all(variantPromises);
 
     const totalTime = ((Date.now() - startTime) / 1000).toFixed(1);
-    console.log('\n📤 Сгенерировано вариантов:', variants.length);
-    console.log(`⏱️  Общее время: ${totalTime}s`);
+    console.log('\n📤 Generated variants:', variants.length);
+    console.log(`⏱️  Total time: ${totalTime}s`);
     console.log('='.repeat(60) + '\n');
 
     return variants;
@@ -86,43 +87,43 @@ export class TextGeneratorClient {
     const startTime = Date.now();
 
     console.log('\n' + '='.repeat(60));
-    console.log('🎬  ГЕНЕРАЦИЯ ПРОМПТОВ ДЛЯ ВИДЕО');
+    console.log('🎬  VIDEO PROMPT GENERATION');
     console.log('='.repeat(60));
-    console.log('📥 Длина текста:', storyText.length, 'символов');
-    console.log('⏱️  Длительность видео:', duration, 'секунд');
+    console.log('📥 Text length:', storyText.length, 'characters');
+    console.log('⏱️  Video duration:', duration, 'seconds');
 
-    // Используем короткие 4-секундные сегменты для более динамичного видео
+    // Use short 4-second segments for more dynamic video
     const segmentDuration = 4;
     const segmentCount = Math.ceil(duration / segmentDuration);
 
-    console.log('📊 Количество сегментов:', segmentCount);
-    console.log('⏱️  Длительность сегмента:', segmentDuration, 'секунд');
+    console.log('📊 Segment count:', segmentCount);
+    console.log('⏱️  Segment duration:', segmentDuration, 'seconds');
 
-    const systemPrompt = `Ты - эксперт по созданию промптов для AI генерации видео.
-Твоя задача - разбить текст истории на сегменты и создать визуальные промпты для каждого сегмента.
+    const systemPrompt = `You are an expert at creating prompts for AI video generation.
+Your task is to split the story text into segments and create visual prompts for each segment.
 
-ТРЕБОВАНИЯ:
-- Раздели текст на ${segmentCount} сегментов (по ${segmentDuration} секунд каждый для ${duration}-секундного видео)
-- Для каждого сегмента создай детальный визуальный промпт для генерации видео
-- Промпты должны быть на английском языке
-- Каждый промпт должен описывать конкретную визуальную сцену
-- Используй кинематографические термины: camera angle, lighting, movement, composition
-- Промпты должны быть согласованы между собой (единый стиль, персонажи, локации)
+REQUIREMENTS:
+- Divide the text into ${segmentCount} segments (${segmentDuration} seconds each for a ${duration}-second video)
+- For each segment, create a detailed visual prompt for video generation
+- Prompts must be in English
+- Each prompt should describe a specific visual scene
+- Use cinematic terms: camera angle, lighting, movement, composition
+- Prompts should be consistent with each other (unified style, characters, locations)
 
-ФОРМАТ ОТВЕТА:
-Верни только JSON массив из РОВНО ${segmentCount} промптов:
+RESPONSE FORMAT:
+Return only a JSON array of EXACTLY ${segmentCount} prompts:
 ["prompt 1", "prompt 2", "prompt 3", ...]
 
-ПРИМЕР ПРОМПТА:
+PROMPT EXAMPLE:
 "Cinematic shot of a truck driver at sunset, warm golden hour lighting, camera slowly pushing in, documentary style, realistic, 4k quality"`;
 
-    console.log('\n🔄 Генерация промптов...');
+    console.log('\n🔄 Generating prompts...');
 
     const response = await this.client.chat.completions.create({
       model: this.model,
       messages: [
         { role: 'system', content: systemPrompt },
-        { role: 'user', content: `Текст истории:\n\n${storyText}` },
+        { role: 'user', content: `Story text:\n\n${storyText}` },
       ],
       temperature: 0.7,
       max_tokens: 2000,
@@ -130,7 +131,7 @@ export class TextGeneratorClient {
 
     const content = response.choices[0]?.message?.content?.trim() || '[]';
 
-    // Извлекаем JSON из ответа (может быть в markdown блоке)
+    // Extract JSON from response (may be in markdown block)
     const jsonMatch = content.match(/\[[\s\S]*\]/);
     const jsonString = jsonMatch ? jsonMatch[0] : content;
 
@@ -138,7 +139,7 @@ export class TextGeneratorClient {
 
     const totalTime = ((Date.now() - startTime) / 1000).toFixed(1);
 
-    console.log(`\n✅ Сгенерировано промптов: ${prompts.length} - ${totalTime}s`);
+    console.log(`\n✅ Generated prompts: ${prompts.length} - ${totalTime}s`);
     prompts.forEach((prompt, i) => {
       console.log(`\n  ${i + 1}. ${prompt.substring(0, 80)}...`);
     });

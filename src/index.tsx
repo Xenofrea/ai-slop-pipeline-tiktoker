@@ -3,30 +3,32 @@ import React from 'react';
 import { render } from 'ink';
 import { App } from './components/App';
 import dotenv from 'dotenv';
+import './i18n/config';
+import i18n from './i18n/config';
 
-// Загружаем переменные окружения
+// Load environment variables
 dotenv.config();
 
-// Парсим аргументы командной строки
+// Parse command line arguments
 const args = process.argv.slice(2);
 const useFreeModels = args.includes('--free');
 
 if (useFreeModels) {
-  console.log('💰 Режим FREE: используются бесплатные модели\n');
+  console.log('💰 FREE mode: using free models\n');
 }
 
-// Проверяем наличие необходимых API ключей
+// Check for required API keys
 if (!process.env.FAL_API_KEY) {
-  console.error('❌ Ошибка: FAL_API_KEY не установлен в .env файле');
+  console.error('❌ Error: FAL_API_KEY not set in .env file');
   process.exit(1);
 }
 
 if (!process.env.OPENROUTER_API_KEY) {
-  console.error('❌ Ошибка: OPENROUTER_API_KEY не установлен в .env файле');
+  console.error('❌ Error: OPENROUTER_API_KEY not set in .env file');
   process.exit(1);
 }
 
-// Рендерим приложение
+// Render application
 const { waitUntilExit } = render(
   <App
     useFreeModels={useFreeModels}
@@ -36,7 +38,7 @@ const { waitUntilExit } = render(
   />
 );
 
-// Обработка выхода
+// Handle exit
 waitUntilExit().then(() => {
-  console.log('\n👋 До свидания!\n');
+  console.log(`\n👋 ${i18n.t('input.exit_message')}\n`);
 });

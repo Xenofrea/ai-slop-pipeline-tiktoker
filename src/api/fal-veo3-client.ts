@@ -33,7 +33,7 @@ export class Veo3Client extends FalBaseClient {
 
     super(modelId, customApiKey);
     this.isSeedanceModel = modelId.includes('seedance');
-    console.log(`🎬 Используется модель видео: ${modelId}${useFreeModel ? ' (FREE)' : ''}`);
+    console.log(`🎬 Using video model: ${modelId}${useFreeModel ? ' (FREE)' : ''}`);
   }
 
 
@@ -43,14 +43,14 @@ export class Veo3Client extends FalBaseClient {
     // Default to 4s if not specified
     let duration: string = videoDuration || "4s";
 
-    // Seedance модель поддерживает только 5s, 6s, 7s, 8s (минимум 5s)
-    // Veo3 поддерживает 4s, 6s, 8s (минимум 4s)
+    // Seedance model supports only 5s, 6s, 7s, 8s (minimum 5s)
+    // Veo3 supports 4s, 6s, 8s (minimum 4s)
     if (this.isSeedanceModel) {
-      // Если 4s - используем 5s (минимум для Seedance)
+      // If 4s - use 5s (minimum for Seedance)
       if (duration === '4s') {
         duration = '5';
       } else {
-        // Убираем "s" для Seedance (например "6s" -> "6")
+        // Remove "s" for Seedance (e.g. "6s" -> "6")
         duration = duration.replace('s', '');
       }
     }
@@ -64,15 +64,15 @@ export class Veo3Client extends FalBaseClient {
       duration,
     };
 
-    // Добавляем параметры специфичные для Veo3
+    // Add Veo3-specific parameters
     if (!this.isSeedanceModel) {
       requestPayload.resolution = '720p';
-      requestPayload.generate_audio = true;
+      requestPayload.generate_audio = false;
       if (aspectRatio) {
         requestPayload.aspect_ratio = aspectRatio;
       }
     } else {
-      // Seedance также поддерживает aspect_ratio
+      // Seedance also supports aspect_ratio
       if (aspectRatio) {
         requestPayload.aspect_ratio = aspectRatio;
       }

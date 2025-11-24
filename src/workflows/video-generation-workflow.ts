@@ -38,7 +38,7 @@ export class VideoGenerationWorkflow {
   }
 
   async generateVideoPrompts(storyText: string, duration: number = 60): Promise<string[]> {
-    // Оборачиваем в retry для устойчивости к ошибкам
+    // Wrap in retry for error resilience
     return await RetryHelper.retry(
       async () => {
         return await this.textGenerator.generateVideoPrompts(storyText, duration);
@@ -48,9 +48,9 @@ export class VideoGenerationWorkflow {
         delayMs: 2000,
         backoffMultiplier: 2,
         onRetry: (attempt, error) => {
-          console.log(`⚠️  Генерация промптов: попытка ${attempt}/3 не удалась`);
-          console.log(`   Ошибка: ${error.message}`);
-          console.log(`   🔄 Повторная попытка через ${2000 * Math.pow(2, attempt - 1)}мс...`);
+          console.log(`⚠️  Prompt generation: attempt ${attempt}/3 failed`);
+          console.log(`   Error: ${error.message}`);
+          console.log(`   🔄 Retrying in ${2000 * Math.pow(2, attempt - 1)}ms...`);
         },
       }
     );
@@ -66,43 +66,43 @@ export class VideoGenerationWorkflow {
   ): Promise<string[]> {
     const startTime = Date.now();
 
-    // Используем короткие сегменты для более динамичного видео
-    // Veo3: 4s (самый короткий), Seedance: 5s (самый короткий)
+    // Use short segments for more dynamic video
+    // Veo3: 4s (shortest), Seedance: 5s (shortest)
     const segmentDuration = 4;
-    const videoDuration = '4s';  // Будет автоматически адаптировано для Seedance в клиенте
+    const videoDuration = '4s';  // Will be automatically adapted for Seedance in client
 
-    console.log(`\n⏱️  Длительность каждого видео: ${videoDuration}`);
-    console.log(`🚀 ПАРАЛЛЕЛЬНАЯ генерация ${prompts.length} видео`);
+    console.log(`\n⏱️  Video duration: ${videoDuration}`);
+    console.log(`🚀 PARALLEL generation of ${prompts.length} videos`);
     if (stylePrompt) {
-      console.log(`🎨 Стиль изображений: ${stylePrompt}`);
+      console.log(`🎨 Image style: ${stylePrompt}`);
     }
 
-    // Если указан reference image, загружаем его один раз
+    // If reference image specified, upload it once
     if (referenceImagePath) {
       try {
         this.referenceImageUrl = await ImageUploader.uploadImage(referenceImagePath);
-        console.log('✅ Reference изображение готово к использованию');
+        console.log('✅ Reference image ready to use');
       } catch (error) {
-        console.error('❌ Ошибка загрузки reference изображения:', error);
-        console.log('⚠️  Продолжаем без reference изображения');
+        console.error('❌ Reference image upload error:', error);
+        console.log('⚠️  Continuing without reference image');
         this.referenceImageUrl = null;
       }
     }
 
-    // Счётчик завершённых видео для прогресса
+    // Counter for completed videos (progress tracking)
     let completed = 0;
 
-    // Создаём промисы для параллельной генерации всех видео
+    // Create promises for parallel generation of all videos
     const videoPromises: Promise<VideoGenerationResult>[] = prompts.map(async (prompt, i) => {
       const videoStartTime = Date.now();
-      console.log(`\n🎬 Запуск генерации видео ${i + 1}/${prompts.length}...`);
-      console.log(`📝 Промпт: ${prompt.substring(0, 80)}...`);
+      console.log(`\n🎬 Starting video ${i + 1}/${prompts.length} generation...`);
+      console.log(`📝 Prompt: ${prompt.substring(0, 80)}...`);
 
-      // Оборачиваем в retry для устойчивости к ошибкам
+      // Wrap in retry for error resilience
       try {
         return await RetryHelper.retry(
           async () => {
-            // Сначала генерируем изображение из промпта и сохраняем его
+            // First generate image from prompt and save it
             const imagePath = this.session.getImagePath(i + 1);
             const imageUrl = await this.fluxClient.generateImage(
               prompt,
@@ -112,7 +112,7 @@ export class VideoGenerationWorkflow {
               stylePrompt || undefined
             );
 
-            // Затем генерируем видео из изображения
+            // Then generate video from image
             const result = await this.veo3Client.generateVideo(
               prompt,
               imageUrl,
@@ -120,21 +120,21 @@ export class VideoGenerationWorkflow {
               aspectRatio
             );
 
-            console.log(`✅ Видео ${i + 1} сгенерировано: ${result.videoUrl}`);
+            console.log(`✅ Video ${i + 1} generated: ${result.videoUrl}`);
 
-            // Сразу скачиваем видео после генерации
+            // Download video immediately after generation
             const videoPath = this.session.getVideoPath(i + 1);
             await this.videoDownloader.downloadVideo(result.videoUrl, videoPath);
-            console.log(`💾 Видео ${i + 1} сохранено: ${videoPath}`);
+            console.log(`💾 Video ${i + 1} saved: ${videoPath}`);
 
-            // Обновляем прогресс
+            // Update progress
             completed++;
             if (onProgress) {
               onProgress(completed, prompts.length);
             }
 
             const videoTime = ((Date.now() - videoStartTime) / 1000).toFixed(1);
-            console.log(`✅ Завершено ${completed}/${prompts.length} видео - ${videoTime}s`);
+            console.log(`✅ Completed ${completed}/${prompts.length} videos - ${videoTime}s`);
 
             return {
               index: i,
@@ -147,19 +147,19 @@ export class VideoGenerationWorkflow {
             delayMs: 3000,
             backoffMultiplier: 2,
             onRetry: (attempt, error) => {
-              console.log(`⚠️  Видео ${i + 1}: попытка ${attempt}/3 не удалась`);
-              console.log(`   Ошибка: ${error.message}`);
-              console.log(`   🔄 Повторная попытка через ${3000 * Math.pow(2, attempt - 1)}мс...`);
+              console.log(`⚠️  Video ${i + 1}: attempt ${attempt}/3 failed`);
+              console.log(`   Error: ${error.message}`);
+              console.log(`   🔄 Retrying in ${3000 * Math.pow(2, attempt - 1)}ms...`);
             },
           }
         );
       } catch (error) {
-        // Логируем ошибку и возвращаем failed результат
+        // Log error and return failed result
         const errorMessage = error instanceof Error ? error.message : String(error);
-        console.error(`❌ Видео ${i + 1} НЕ УДАЛОСЬ сгенерировать после всех попыток`);
-        console.error(`   Ошибка: ${errorMessage}`);
-        console.error(`   Промпт: ${prompt}`);
-        console.log(`⚠️  Продолжаем с остальными видео...\n`);
+        console.error(`❌ Video ${i + 1} FAILED to generate after all attempts`);
+        console.error(`   Error: ${errorMessage}`);
+        console.error(`   Prompt: ${prompt}`);
+        console.log(`⚠️  Continuing with remaining videos...\n`);
 
         return {
           index: i,
@@ -171,44 +171,44 @@ export class VideoGenerationWorkflow {
       }
     });
 
-    // Ждём завершения всех видео параллельно (даже если некоторые упали)
-    console.log('\n⏳ Ожидание завершения всех видео...');
+    // Wait for all videos to complete in parallel (even if some fail)
+    console.log('\n⏳ Waiting for all videos to complete...');
     const results = await Promise.all(videoPromises);
 
-    // Сортируем по индексу чтобы сохранить порядок
+    // Sort by index to preserve order
     results.sort((a, b) => a.index - b.index);
 
-    // Разделяем успешные и неудачные результаты
+    // Separate successful and failed results
     const successfulResults = results.filter(r => r.success && r.path);
     const failedResults = results.filter(r => !r.success);
 
     const videoPaths = successfulResults.map(r => r.path!);
     const totalTime = ((Date.now() - startTime) / 1000).toFixed(1);
 
-    // Отчёт о результатах
+    // Results report
     console.log('\n' + '='.repeat(60));
-    console.log('📊 РЕЗУЛЬТАТЫ ГЕНЕРАЦИИ ВИДЕО');
+    console.log('📊 VIDEO GENERATION RESULTS');
     console.log('='.repeat(60));
-    console.log(`✅ Успешно: ${successfulResults.length}/${prompts.length} видео`);
+    console.log(`✅ Successful: ${successfulResults.length}/${prompts.length} videos`);
     if (failedResults.length > 0) {
-      console.log(`❌ Ошибки: ${failedResults.length}/${prompts.length} видео\n`);
-      console.log('Проблемные промпты:');
+      console.log(`❌ Errors: ${failedResults.length}/${prompts.length} videos\n`);
+      console.log('Problematic prompts:');
       failedResults.forEach(f => {
         console.log(`  ${f.index + 1}. ${f.prompt?.substring(0, 60)}...`);
-        console.log(`     Ошибка: ${f.error}\n`);
+        console.log(`     Error: ${f.error}\n`);
       });
     }
-    console.log(`⏱️  Общее время: ${totalTime}s`);
+    console.log(`⏱️  Total time: ${totalTime}s`);
     console.log('='.repeat(60) + '\n');
 
-    // Если НИ ОДНО видео не сгенерировалось - пробрасываем ошибку
+    // If NO videos were generated - throw error
     if (videoPaths.length === 0) {
-      throw new Error('Не удалось сгенерировать ни одного видео. Проверьте промпты и настройки API.');
+      throw new Error('Failed to generate any videos. Check prompts and API settings.');
     }
 
-    // Если хотя бы одно видео есть - продолжаем
+    // If at least one video exists - continue
     if (failedResults.length > 0) {
-      console.log(`⚠️  Продолжаем работу с ${videoPaths.length} успешными видео\n`);
+      console.log(`⚠️  Continuing with ${videoPaths.length} successful videos\n`);
     }
 
     return videoPaths;
@@ -217,12 +217,12 @@ export class VideoGenerationWorkflow {
   async generateAudio(text: string, voiceId?: string): Promise<string> {
     const startTime = Date.now();
 
-    // Устанавливаем голос если передан
+    // Set voice if provided
     if (voiceId) {
       this.ttsClient.setVoiceId(voiceId);
     }
 
-    // Оборачиваем в retry для устойчивости к ошибкам
+    // Wrap in retry for error resilience
     const result = await RetryHelper.retry(
       async () => {
         const result = await this.ttsClient.generateSpeech(text, this.session.getPaths().audio);
@@ -233,17 +233,17 @@ export class VideoGenerationWorkflow {
         delayMs: 3000,
         backoffMultiplier: 2,
         onRetry: (attempt, error) => {
-          console.log(`⚠️  Генерация аудио: попытка ${attempt}/3 не удалась`);
-          console.log(`   Ошибка: ${error.message}`);
-          console.log(`   🔄 Повторная попытка через ${3000 * Math.pow(2, attempt - 1)}мс...`);
+          console.log(`⚠️  Audio generation: attempt ${attempt}/3 failed`);
+          console.log(`   Error: ${error.message}`);
+          console.log(`   🔄 Retrying in ${3000 * Math.pow(2, attempt - 1)}ms...`);
         },
       }
     );
 
     const totalTime = ((Date.now() - startTime) / 1000).toFixed(1);
-    console.log(`⏱️  Время генерации аудио: ${totalTime}s`);
+    console.log(`⏱️  Audio generation time: ${totalTime}s`);
 
-    // Возвращаем реальный путь к аудио файлу
+    // Return actual audio file path
     return result.audioPath;
   }
 
@@ -252,8 +252,8 @@ export class VideoGenerationWorkflow {
     const startTime = Date.now();
     const result = await this.videoMerger.mergeVideos(videoPaths, this.session.getPaths().result);
     const totalTime = ((Date.now() - startTime) / 1000).toFixed(1);
-    console.log(`⏱️  Время склейки видео: ${totalTime}s`);
-    // Возвращаем реальный путь к созданному файлу
+    console.log(`⏱️  Video merging time: ${totalTime}s`);
+    // Return actual created file path
     return result.outputPath;
   }
 
@@ -261,8 +261,8 @@ export class VideoGenerationWorkflow {
     const startTime = Date.now();
     const finalPath = await this.videoMerger.addAudioToVideo(videoPath, audioPath, this.session.getPaths().result);
     const totalTime = ((Date.now() - startTime) / 1000).toFixed(1);
-    console.log(`⏱️  Время добавления аудио: ${totalTime}s`);
-    // Возвращаем реальный путь к созданному файлу
+    console.log(`⏱️  Audio addition time: ${totalTime}s`);
+    // Return actual created file path
     return finalPath;
   }
 
@@ -270,35 +270,35 @@ export class VideoGenerationWorkflow {
     const workflowStartTime = Date.now();
 
     console.log('\n' + '='.repeat(60));
-    console.log('🚀 ЗАПУСК ПОЛНОГО WORKFLOW');
+    console.log('🚀 FULL WORKFLOW START');
     console.log('='.repeat(60));
 
-    // 1. Генерация промптов для видео
-    console.log('\n📝 Шаг 1: Генерация промптов для видео...');
+    // 1. Generate video prompts
+    console.log('\n📝 Step 1: Generating video prompts...');
     const prompts = await this.generateVideoPrompts(storyText);
-    console.log(`✅ Создано ${prompts.length} промптов\n`);
+    console.log(`✅ Created ${prompts.length} prompts\n`);
 
-    // 2. Генерация видео (с изображениями) - видео скачиваются автоматически
-    console.log('\n🎬 Шаг 2: Генерация изображений и видео...');
+    // 2. Generate videos (with images) - videos downloaded automatically
+    console.log('\n🎬 Step 2: Generating images and videos...');
     const videoPaths = await this.generateVideos(prompts);
-    console.log(`✅ Сгенерировано и сохранено ${videoPaths.length} видео\n`);
+    console.log(`✅ Generated and saved ${videoPaths.length} videos\n`);
 
-    // 3. Генерация аудио
-    console.log('\n🔊 Шаг 3: Генерация озвучки...');
+    // 3. Generate audio
+    console.log('\n🔊 Step 3: Generating narration...');
     const audioPath = await this.generateAudio(storyText);
-    console.log(`✅ Озвучка создана: ${audioPath}\n`);
+    console.log(`✅ Narration created: ${audioPath}\n`);
 
-    // 4. Склейка видео
-    console.log('\n🎞️ Шаг 4: Склейка видео...');
+    // 4. Merge videos
+    console.log('\n🎞️ Step 4: Merging videos...');
     const mergedVideoPath = await this.mergeVideos(videoPaths);
-    console.log(`✅ Видео склеено: ${mergedVideoPath}\n`);
+    console.log(`✅ Videos merged: ${mergedVideoPath}\n`);
 
-    // 5. Добавление аудио
-    console.log('\n🎵 Шаг 5: Добавление озвучки...');
+    // 5. Add audio
+    console.log('\n🎵 Step 5: Adding narration...');
     const finalVideoPath = await this.addAudioToVideo(mergedVideoPath, audioPath);
-    console.log(`✅ Финальное видео: ${finalVideoPath}\n`);
+    console.log(`✅ Final video: ${finalVideoPath}\n`);
 
-    // 6. Сохранение метаданных
+    // 6. Save metadata
     this.session.saveMetadata({
       description,
       storyText,
@@ -310,10 +310,10 @@ export class VideoGenerationWorkflow {
     const totalWorkflowTime = ((Date.now() - workflowStartTime) / 1000).toFixed(1);
 
     console.log('='.repeat(60));
-    console.log('🎉 WORKFLOW ЗАВЕРШЁН!');
-    console.log('📁 Папка сессии:', this.session.getPaths().root);
-    console.log('📁 Итоговое видео:', finalVideoPath);
-    console.log(`⏱️  Общее время выполнения: ${totalWorkflowTime}s (${(parseFloat(totalWorkflowTime) / 60).toFixed(1)} мин)`);
+    console.log('🎉 WORKFLOW COMPLETE!');
+    console.log('📁 Session folder:', this.session.getPaths().root);
+    console.log('📁 Final video:', finalVideoPath);
+    console.log(`⏱️  Total execution time: ${totalWorkflowTime}s (${(parseFloat(totalWorkflowTime) / 60).toFixed(1)} min)`);
     console.log('='.repeat(60) + '\n');
 
     return finalVideoPath;

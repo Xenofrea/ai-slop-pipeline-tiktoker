@@ -1,44 +1,47 @@
 import React from 'react';
 import { Box, Text } from 'ink';
 import SelectInput from 'ink-select-input';
+import { useTranslation } from 'react-i18next';
 
 interface DurationSelectorProps {
   onSelect: (duration: number) => void;
 }
 
 export const DurationSelector: React.FC<DurationSelectorProps> = ({ onSelect }) => {
+  const { t } = useTranslation();
+
   const items = [
     {
-      label: '6 секунд',
+      label: t('duration.6_seconds'),
       value: 6,
-      description: '1 видео по 6 секунд',
+      description: t('duration.desc_1_video'),
     },
     {
-      label: '12 секунд',
+      label: t('duration.12_seconds'),
       value: 12,
-      description: '2 видео по 6 секунд',
+      description: t('duration.desc_2_videos'),
     },
     {
-      label: '30 секунд',
+      label: t('duration.30_seconds'),
       value: 30,
-      description: '5 видео по 6 секунд',
+      description: t('duration.desc_5_videos'),
     },
     {
-      label: '45 секунд',
+      label: t('duration.45_seconds'),
       value: 45,
-      description: '7-8 видео по 6 секунд',
+      description: t('duration.desc_7_8_videos'),
     },
     {
-      label: '60 секунд (1 минута)',
+      label: t('duration.60_seconds'),
       value: 60,
-      description: '10 видео по 6 секунд',
+      description: t('duration.desc_10_videos'),
     },
   ];
 
   return (
     <Box flexDirection="column">
       <Box marginBottom={1}>
-        <Text color="cyan">⏱️  Выберите длину итогового видео (используйте стрелки ↑↓):</Text>
+        <Text color="cyan">⏱️  {t('duration.title')}</Text>
       </Box>
 
       {items.map((item, index) => (

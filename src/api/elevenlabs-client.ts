@@ -36,16 +36,16 @@ export class ElevenLabsTTSClient extends FalBaseClient {
 
   constructor(customApiKey?: string) {
     super('fal-ai/elevenlabs/tts/eleven-v3', customApiKey);
-    // Дефолтный голос (можно изменить на любой другой)
+    // Default voice (can be changed to any other)
     this.voiceId = 'JBFqnCBsd6RMkjVDRZzb'; // George - Deep, authoritative male voice
   }
 
   async generateSpeech(text: string, outputDir: string = './output'): Promise<TextToSpeechResult> {
     console.log('\n' + '='.repeat(60));
-    console.log('🔊  ГЕНЕРАЦИЯ ОЗВУЧКИ (ELEVENLABS via FAL)');
+    console.log('🔊  NARRATION GENERATION (ELEVENLABS via FAL)');
     console.log('='.repeat(60));
-    console.log('📥 Текст:', text.substring(0, 100) + '...');
-    console.log('📥 Длина текста:', text.length, 'символов');
+    console.log('📥 Text:', text.substring(0, 100) + '...');
+    console.log('📥 Text length:', text.length, 'characters');
     console.log('🎤 Voice ID:', this.voiceId);
     console.log('🤖 Model:', 'fal-ai/elevenlabs/tts/eleven-v3');
 
@@ -77,15 +77,15 @@ export class ElevenLabsTTSClient extends FalBaseClient {
       throw new Error('No audio URL in result');
     }
 
-    // Создаём директорию для вывода, если её нет
+    // Create output directory if it doesn't exist
     if (!fs.existsSync(outputDir)) {
       fs.mkdirSync(outputDir, { recursive: true });
     }
 
     const audioPath = path.join(outputDir, `narration_${Date.now()}.mp3`);
 
-    // Скачиваем аудио
-    console.log('\n💾 Скачивание аудио файла...');
+    // Download audio
+    console.log('\n💾 Downloading audio file...');
     const response = await fetch(result.audio.url);
     if (!response.ok) {
       throw new Error(`Failed to download audio: ${response.statusText}`);
@@ -94,14 +94,14 @@ export class ElevenLabsTTSClient extends FalBaseClient {
     const audioBuffer = Buffer.from(await response.arrayBuffer());
     fs.writeFileSync(audioPath, audioBuffer);
 
-    console.log('✅ Аудио сохранено:', audioPath);
-    console.log('📊 Размер файла:', (audioBuffer.length / 1024).toFixed(2), 'KB');
+    console.log('✅ Audio saved:', audioPath);
+    console.log('📊 File size:', (audioBuffer.length / 1024).toFixed(2), 'KB');
 
-    // Примерная оценка длительности (средняя скорость речи ~ 150 слов/мин)
+    // Approximate duration estimation (average speech rate ~ 150 words/min)
     const wordCount = text.split(/\s+/).length;
-    const estimatedDuration = (wordCount / 150) * 60; // в секундах
+    const estimatedDuration = (wordCount / 150) * 60; // in seconds
 
-    console.log('⏱️  Примерная длительность:', estimatedDuration.toFixed(1), 'секунд');
+    console.log('⏱️  Estimated duration:', estimatedDuration.toFixed(1), 'seconds');
     console.log('='.repeat(60) + '\n');
 
     return {
@@ -113,6 +113,6 @@ export class ElevenLabsTTSClient extends FalBaseClient {
 
   setVoiceId(voiceId: string) {
     this.voiceId = voiceId;
-    console.log('🎤 Voice ID изменён на:', voiceId);
+    console.log('🎤 Voice ID changed to:', voiceId);
   }
 }

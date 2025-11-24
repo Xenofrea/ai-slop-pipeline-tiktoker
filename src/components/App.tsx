@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { Box, Text } from 'ink';
 import TextInput from 'ink-text-input';
+import { useTranslation } from 'react-i18next';
 import { DurationSelector } from './DurationSelector';
 import { AspectRatioSelector } from './AspectRatioSelector';
 import { StoryVariantSelector } from './StoryVariantSelector';
@@ -18,6 +19,7 @@ interface AppProps {
 }
 
 export const App: React.FC<AppProps> = ({ useFreeModels = false, onExit }) => {
+  const { t } = useTranslation();
   const [step, setStep] = useState<Step>('input');
   const [description, setDescription] = useState('');
   const [duration, setDuration] = useState<number>(60);
@@ -74,14 +76,14 @@ export const App: React.FC<AppProps> = ({ useFreeModels = false, onExit }) => {
     <Box flexDirection="column" padding={1}>
       <Box marginBottom={1}>
         <Text bold color="cyan">
-          🎬 TikToker - AI Video Generator
+          🎬 {t('app.title')}
         </Text>
       </Box>
 
       {step === 'input' && (
         <Box flexDirection="column">
           <Box marginBottom={1}>
-            <Text>📝 Введите описание для видео (например: "история про дальнобойщиков"):</Text>
+            <Text>📝 {t('input.description_label')}</Text>
           </Box>
           <Box>
             <Text color="green">&gt; </Text>
@@ -89,7 +91,7 @@ export const App: React.FC<AppProps> = ({ useFreeModels = false, onExit }) => {
               value={description}
               onChange={setDescription}
               onSubmit={handleDescriptionSubmit}
-              placeholder="Введите описание..."
+              placeholder={t('input.description_placeholder')}
             />
           </Box>
         </Box>
@@ -140,8 +142,8 @@ export const App: React.FC<AppProps> = ({ useFreeModels = false, onExit }) => {
 
       {step === 'done' && (
         <Box flexDirection="column" marginTop={1}>
-          <Text color="green" bold>✅ Готово! Ваше видео создано.</Text>
-          <Text dimColor>Выход через 2 секунды...</Text>
+          <Text color="green" bold>✅ {t('done.message')}</Text>
+          <Text dimColor>{t('done.exit')}</Text>
         </Box>
       )}
     </Box>

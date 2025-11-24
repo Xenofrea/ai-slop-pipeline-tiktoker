@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { Box, Text } from 'ink';
 import TextInput from 'ink-text-input';
 import SelectInput from 'ink-select-input';
+import { useTranslation } from 'react-i18next';
 import { TextGeneratorClient, TextGenerationResult } from '../api/text-generator-client';
 
 interface StoryVariantSelectorProps {
@@ -19,6 +20,7 @@ export const StoryVariantSelector: React.FC<StoryVariantSelectorProps> = ({
   onVariantsGenerated,
   onSelect,
 }) => {
+  const { t } = useTranslation();
   const [loading, setLoading] = useState(true);
   const [variants, setVariants] = useState<TextGenerationResult[]>([]);
   const [error, setError] = useState<string | null>(null);
@@ -48,8 +50,8 @@ export const StoryVariantSelector: React.FC<StoryVariantSelectorProps> = ({
   if (loading) {
     return (
       <Box flexDirection="column">
-        <Text color="yellow">⏳ Генерация вариантов текста...</Text>
-        <Text dimColor>Это может занять несколько секунд...</Text>
+        <Text color="yellow">⏳ {t('variants.loading')}</Text>
+        <Text dimColor>{t('variants.loading_desc')}</Text>
       </Box>
     );
   }
@@ -57,26 +59,26 @@ export const StoryVariantSelector: React.FC<StoryVariantSelectorProps> = ({
   if (error) {
     return (
       <Box>
-        <Text color="red">❌ Ошибка: {error}</Text>
+        <Text color="red">❌ {t('variants.error')} {error}</Text>
       </Box>
     );
   }
 
   const items = [
     ...variants.map((variant, index) => ({
-      label: `Вариант ${index + 1}`,
+      label: `${t('variants.variant')} ${index + 1}`,
       value: variant,
       description: variant.text.substring(0, 100) + '...',
     })),
     {
-      label: '✏️ Ввести свой текст',
+      label: `✏️ ${t('variants.custom')}`,
       value: 'custom' as any,
-      description: 'Написать собственную историю',
+      description: t('variants.custom_desc'),
     },
     {
-      label: '🔄 Перегенерировать варианты',
+      label: `🔄 ${t('variants.regenerate')}`,
       value: null as any,
-      description: 'Создать новые 3 варианта текста',
+      description: t('variants.regenerate_desc'),
     },
   ];
 
@@ -100,15 +102,15 @@ export const StoryVariantSelector: React.FC<StoryVariantSelectorProps> = ({
     onSelect(customVariant);
   };
 
-  // Режим ввода своего текста
+  // Custom text input mode
   if (customMode) {
     return (
       <Box flexDirection="column">
         <Box marginBottom={1}>
-          <Text color="cyan" bold>✏️ Введите свой текст для видео:</Text>
+          <Text color="cyan" bold>✏️ {t('variants.custom_mode_title')}</Text>
         </Box>
         <Box marginBottom={1}>
-          <Text dimColor>Напишите историю, которую хотите превратить в видео</Text>
+          <Text dimColor>{t('variants.custom_mode_desc')}</Text>
         </Box>
         <Box>
           <Text color="green">&gt; </Text>
@@ -116,7 +118,7 @@ export const StoryVariantSelector: React.FC<StoryVariantSelectorProps> = ({
             value={customText}
             onChange={setCustomText}
             onSubmit={handleCustomTextSubmit}
-            placeholder="Введите текст..."
+            placeholder={t('variants.custom_mode_placeholder')}
           />
         </Box>
       </Box>
@@ -126,13 +128,13 @@ export const StoryVariantSelector: React.FC<StoryVariantSelectorProps> = ({
   return (
     <Box flexDirection="column">
       <Box marginBottom={1}>
-        <Text color="cyan">📚 Выберите вариант текста (используйте стрелки ↑↓):</Text>
+        <Text color="cyan">📚 {t('variants.title')}</Text>
       </Box>
 
       {variants.map((variant, index) => (
         <Box key={index} flexDirection="column" marginBottom={1} borderStyle="round" borderColor="gray" padding={1}>
           <Text bold color="yellow">
-            Вариант {index + 1}:
+            {t('variants.variant')} {index + 1}:
           </Text>
           <Text>{variant.text}</Text>
         </Box>

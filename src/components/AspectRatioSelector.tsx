@@ -1,22 +1,25 @@
 import React from 'react';
 import { Box, Text } from 'ink';
 import SelectInput from 'ink-select-input';
+import { useTranslation } from 'react-i18next';
 
 interface AspectRatioSelectorProps {
   onSelect: (ratio: '16:9' | '9:16') => void;
 }
 
 export const AspectRatioSelector: React.FC<AspectRatioSelectorProps> = ({ onSelect }) => {
+  const { t } = useTranslation();
+
   const items = [
     {
-      label: '9:16 (Вертикальное - TikTok/Reels)',
+      label: t('aspect_ratio.vertical'),
       value: '9:16' as const,
-      description: 'Оптимально для мобильных устройств, TikTok, Instagram Reels, YouTube Shorts',
+      description: t('aspect_ratio.vertical_desc'),
     },
     {
-      label: '16:9 (Горизонтальное - YouTube)',
+      label: t('aspect_ratio.horizontal'),
       value: '16:9' as const,
-      description: 'Стандартный формат для YouTube, десктопа, телевизоров',
+      description: t('aspect_ratio.horizontal_desc'),
     },
   ];
 
@@ -24,7 +27,7 @@ export const AspectRatioSelector: React.FC<AspectRatioSelectorProps> = ({ onSele
     <Box flexDirection="column">
       <Box marginBottom={1}>
         <Text color="cyan" bold>
-          📐 Выберите формат видео:
+          📐 {t('aspect_ratio.title')}
         </Text>
       </Box>
 

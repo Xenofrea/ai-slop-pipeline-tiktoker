@@ -2,30 +2,32 @@ import React, { useState } from 'react';
 import { Box, Text } from 'ink';
 import TextInput from 'ink-text-input';
 import SelectInput from 'ink-select-input';
+import { useTranslation } from 'react-i18next';
 
 interface VoiceSelectorProps {
   onSelect: (voiceId: string) => void;
 }
 
 export const VoiceSelector: React.FC<VoiceSelectorProps> = ({ onSelect }) => {
+  const { t } = useTranslation();
   const [customMode, setCustomMode] = useState(false);
   const [customVoiceId, setCustomVoiceId] = useState('');
 
   const voices = [
     {
-      label: '🎤 Голос 1 - Josh (Мужской, глубокий)',
+      label: `🎤 ${t('voice.voice_1')}`,
       value: '3EuKHIEZbSzrHGNmdYsx',
     },
     {
-      label: '🎤 Голос 2 - Rachel (Женский, спокойный)',
+      label: `🎤 ${t('voice.voice_2')}`,
       value: 'TUQNWEvVPBLzMBSVDPUA',
     },
     {
-      label: '🎤 Голос 3 - Clyde (Мужской, средний)',
+      label: `🎤 ${t('voice.voice_3')}`,
       value: 'Aa6nEBJJMKJwJkCx8VU2',
     },
     {
-      label: '✏️ Ввести свой Voice ID',
+      label: `✏️ ${t('voice.custom')}`,
       value: 'custom',
     },
   ];
@@ -42,15 +44,15 @@ export const VoiceSelector: React.FC<VoiceSelectorProps> = ({ onSelect }) => {
     onSelect(voiceId);
   };
 
-  // Режим ввода своего Voice ID
+  // Custom Voice ID input mode
   if (customMode) {
     return (
       <Box flexDirection="column">
         <Box marginBottom={1}>
-          <Text color="cyan" bold>✏️ Введите ElevenLabs Voice ID:</Text>
+          <Text color="cyan" bold>✏️ {t('voice.custom_title')}</Text>
         </Box>
         <Box marginBottom={1}>
-          <Text dimColor>Найдите Voice ID в своей библиотеке ElevenLabs</Text>
+          <Text dimColor>{t('voice.custom_desc')}</Text>
         </Box>
         <Box>
           <Text color="green">&gt; </Text>
@@ -58,7 +60,7 @@ export const VoiceSelector: React.FC<VoiceSelectorProps> = ({ onSelect }) => {
             value={customVoiceId}
             onChange={setCustomVoiceId}
             onSubmit={handleCustomVoiceIdSubmit}
-            placeholder="Введите Voice ID..."
+            placeholder={t('voice.custom_placeholder')}
           />
         </Box>
       </Box>
@@ -69,12 +71,12 @@ export const VoiceSelector: React.FC<VoiceSelectorProps> = ({ onSelect }) => {
     <Box flexDirection="column">
       <Box marginBottom={1}>
         <Text bold color="cyan">
-          🎤 Выберите голос для озвучки:
+          🎤 {t('voice.title')}
         </Text>
       </Box>
 
       <Box marginBottom={1}>
-        <Text dimColor>Используйте стрелки ↑↓ для навигации, Enter для выбора</Text>
+        <Text dimColor>{t('voice.desc')}</Text>
       </Box>
 
       <SelectInput items={voices} onSelect={handleSelect} />

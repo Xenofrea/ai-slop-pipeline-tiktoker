@@ -1,8 +1,10 @@
 import fs from 'fs';
 import path from 'path';
+import i18n from '../i18n/config';
 
 export interface StylePreset {
-  name: string;
+  key?: string;  // For built-in styles (optional for custom styles)
+  name?: string; // For custom user styles (deprecated for built-in)
   prompt: string;
 }
 
@@ -10,25 +12,37 @@ export class StyleManager {
   private static stylesFilePath = path.join(process.cwd(), 'styles.json');
 
   /**
-   * Загружает стили из файла
+   * Load styles from file
    */
   static loadStyles(): StylePreset[] {
     try {
       if (!fs.existsSync(this.stylesFilePath)) {
-        // Создаём файл с дефолтными стилями, если его нет
+        // Create file with default styles if it doesn't exist
         this.createDefaultStylesFile();
       }
 
       const data = fs.readFileSync(this.stylesFilePath, 'utf-8');
       return JSON.parse(data);
     } catch (error) {
-      console.error('Ошибка загрузки стилей:', error);
+      console.error('Error loading styles:', error);
       return this.getDefaultStyles();
     }
   }
 
   /**
-   * Сохраняет стили в файл
+   * Get localized name for style
+   */
+  static getStyleName(style: StylePreset): string {
+    if (style.key) {
+      // Built-in style - use i18n
+      return i18n.t(`styles.${style.key}`);
+    }
+    // Custom style - use name directly
+    return style.name || 'Custom Style';
+  }
+
+  /**
+   * Save styles to file
    */
   static saveStyles(styles: StylePreset[]): void {
     try {
@@ -38,69 +52,69 @@ export class StyleManager {
         'utf-8'
       );
     } catch (error) {
-      console.error('Ошибка сохранения стилей:', error);
+      console.error('Error saving styles:', error);
     }
   }
 
   /**
-   * Добавляет новый кастомный стиль в начало списка
+   * Add new custom style at the beginning of the list
    */
   static addCustomStyle(name: string, prompt: string): void {
     const styles = this.loadStyles();
 
-    // Проверяем, нет ли уже такого стиля
+    // Check if style with this name already exists
     const existingIndex = styles.findIndex(s => s.name === name);
     if (existingIndex !== -1) {
-      // Если есть, удаляем старый
+      // If exists, remove the old one
       styles.splice(existingIndex, 1);
     }
 
-    // Добавляем в начало
+    // Add to the beginning
     styles.unshift({ name, prompt });
 
-    // Ограничиваем количество стилей (максимум 20)
+    // Limit number of styles (maximum 20)
     if (styles.length > 20) {
       styles.splice(20);
     }
 
     this.saveStyles(styles);
-    console.log(`✅ Стиль "${name}" сохранён`);
+    console.log(`✅ Style "${name}" saved`);
   }
 
   /**
-   * Дефолтные стили
+   * Default styles
    */
   private static getDefaultStyles(): StylePreset[] {
     return [
       {
-        name: 'Реалистичный кинематографический',
+        key: 'realistic_cinematic',
         prompt: 'photorealistic, cinematic lighting, dramatic composition, film grain, high quality, 4k',
       },
       {
-        name: 'Аниме стиль',
+        key: 'anime',
         prompt: 'anime style, vibrant colors, Studio Ghibli aesthetic, cel shaded, detailed illustration',
       },
       {
-        name: 'Киберпанк',
+        key: 'cyberpunk',
         prompt: 'cyberpunk aesthetic, neon lights, futuristic cityscape, dark atmosphere, high contrast',
       },
       {
-        name: 'Масляная живопись',
+        key: 'oil_painting',
         prompt: 'oil painting, impressionist style, soft brushstrokes, artistic, painterly effect',
       },
       {
-        name: 'Минимализм',
+        key: 'minimalism',
         prompt: 'minimalist, clean lines, pastel colors, simple composition, modern aesthetic',
       },
     ];
   }
 
   /**
-   * Создаёт файл с дефолтными стилями
+   * Create file with default styles
    */
   private static createDefaultStylesFile(): void {
     const defaultStyles = this.getDefaultStyles();
     this.saveStyles(defaultStyles);
-    console.log('📁 Создан файл styles.json с дефолтными стилями');
+    console.log('📁 Created styles.json file with default styles');
   }
 }

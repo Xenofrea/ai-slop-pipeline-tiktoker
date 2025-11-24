@@ -30,29 +30,29 @@ export class FluxClient extends FalBaseClient {
       : (process.env.FAL_IMAGE_MODEL || 'fal-ai/flux/schnell');
 
     super(model, customApiKey);
-    console.log(`🖼️  Используется модель изображений: ${model}${useFreeModel ? ' (FREE)' : ''}`);
+    console.log(`🖼️  Using image model: ${model}${useFreeModel ? ' (FREE)' : ''}`);
   }
 
   async generateImage(prompt: string, savePath?: string, aspectRatio: '16:9' | '9:16' = '9:16', referenceImageUrl?: string, stylePrompt?: string): Promise<string> {
-    // Добавляем стилевые инструкции к промпту
+    // Add style instructions to prompt
     let finalPrompt = prompt;
     if (stylePrompt && stylePrompt.trim()) {
       finalPrompt = `${prompt}, ${stylePrompt}`;
     }
 
-    // Определяем размеры изображения в зависимости от aspect ratio
+    // Determine image size based on aspect ratio
     const imageSize = aspectRatio === '16:9'
-      ? { width: 1280, height: 720 }    // Горизонтальное
-      : { width: 720, height: 1280 };   // Вертикальное
+      ? { width: 1280, height: 720 }    // Horizontal
+      : { width: 720, height: 1280 };   // Vertical
 
-    console.log('\n🖼️  Генерация изображения для видео...');
-    console.log('   Промпт:', finalPrompt.substring(0, 80) + '...');
-    console.log('   📐 Формат:', aspectRatio, `(${imageSize.width}x${imageSize.height})`);
+    console.log('\n🖼️  Generating image for video...');
+    console.log('   Prompt:', finalPrompt.substring(0, 80) + '...');
+    console.log('   📐 Format:', aspectRatio, `(${imageSize.width}x${imageSize.height})`);
     if (stylePrompt) {
-      console.log('   🎨 Стиль:', stylePrompt);
+      console.log('   🎨 Style:', stylePrompt);
     }
     if (referenceImageUrl) {
-      console.log('   🖼️  Reference изображение:', referenceImageUrl);
+      console.log('   🖼️  Reference image:', referenceImageUrl);
     }
 
     const requestPayload: FluxInput = {
@@ -63,10 +63,10 @@ export class FluxClient extends FalBaseClient {
       enable_safety_checker: false,
     };
 
-    // Если есть reference изображение, добавляем его в запрос
+    // If reference image exists, add it to request
     if (referenceImageUrl) {
       requestPayload.image_url = referenceImageUrl;
-      requestPayload.strength = 0.75; // Сила влияния reference изображения (0-1)
+      requestPayload.strength = 0.75; // Reference image influence strength (0-1)
     }
 
     const job = await this.submitJob(requestPayload);
@@ -77,14 +77,14 @@ export class FluxClient extends FalBaseClient {
     }
 
     const imageUrl = result.images[0].url;
-    console.log('   ✅ Изображение создано:', imageUrl);
+    console.log('   ✅ Image created:', imageUrl);
 
-    // Если указан путь для сохранения, скачиваем изображение
+    // If save path specified, download image
     if (savePath) {
       const fs = await import('fs');
       const fetch = (await import('node-fetch')).default;
 
-      console.log('   💾 Сохранение изображения:', savePath);
+      console.log('   💾 Saving image:', savePath);
       const response = await fetch(imageUrl);
       if (!response.ok) {
         throw new Error(`Failed to download image: ${response.statusText}`);
@@ -92,7 +92,7 @@ export class FluxClient extends FalBaseClient {
 
       const imageBuffer = Buffer.from(await response.arrayBuffer());
       fs.writeFileSync(savePath, imageBuffer);
-      console.log('   ✅ Изображение сохранено:', savePath);
+      console.log('   ✅ Image saved:', savePath);
     }
 
     return imageUrl;

@@ -14,11 +14,11 @@ export class SessionManager {
   private paths: SessionPaths;
 
   constructor(baseDir: string = './output') {
-    // Создаём уникальный ID сессии на основе времени
+    // Create unique session ID based on timestamp
     const timestamp = new Date().toISOString().replace(/[:.]/g, '-').slice(0, -5);
     this.sessionId = `session_${timestamp}`;
 
-    // Создаём структуру папок
+    // Create folder structure
     const rootPath = path.join(baseDir, this.sessionId);
 
     this.paths = {
@@ -29,11 +29,11 @@ export class SessionManager {
       result: path.join(rootPath, 'result'),
     };
 
-    // Создаём все папки
+    // Create all folders
     this.createDirectories();
 
-    console.log('\n📁 Создана сессия:', this.sessionId);
-    console.log('   📂 Папка:', this.paths.root);
+    console.log('\n📁 Session created:', this.sessionId);
+    console.log('   📂 Folder:', this.paths.root);
   }
 
   private createDirectories(): void {
@@ -88,20 +88,20 @@ export class SessionManager {
       JSON.stringify(metadata, null, 2)
     );
 
-    console.log('💾 Метаданные сохранены:', this.getMetadataPath());
+    console.log('💾 Metadata saved:', this.getMetadataPath());
   }
 
   printSummary(): void {
     console.log('\n' + '='.repeat(60));
-    console.log('📊 СВОДКА СЕССИИ');
+    console.log('📊 SESSION SUMMARY');
     console.log('='.repeat(60));
-    console.log('🆔 ID сессии:', this.sessionId);
-    console.log('📂 Папка:', this.paths.root);
-    console.log('\n📁 Структура:');
-    console.log('   🖼️  Изображения:', this.paths.images);
-    console.log('   🎬 Видео:', this.paths.videos);
-    console.log('   🔊 Аудио:', this.paths.audio);
-    console.log('   ✨ Результат:', this.paths.result);
+    console.log('🆔 Session ID:', this.sessionId);
+    console.log('📂 Folder:', this.paths.root);
+    console.log('\n📁 Structure:');
+    console.log('   🖼️  Images:', this.paths.images);
+    console.log('   🎬 Videos:', this.paths.videos);
+    console.log('   🔊 Audio:', this.paths.audio);
+    console.log('   ✨ Result:', this.paths.result);
     console.log('='.repeat(60) + '\n');
   }
 }

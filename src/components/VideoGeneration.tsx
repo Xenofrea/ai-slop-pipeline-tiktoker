@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { Box, Text } from 'ink';
 import Spinner from 'ink-spinner';
+import { useTranslation } from 'react-i18next';
 import { VideoGenerationWorkflow } from '../workflows/video-generation-workflow';
 
 interface VideoGenerationProps {
@@ -25,6 +26,7 @@ type Stage =
   | 'error';
 
 export const VideoGeneration: React.FC<VideoGenerationProps> = ({ storyText, duration, aspectRatio, referenceImage, stylePrompt, voiceId, useFreeModels = false, onComplete }) => {
+  const { t } = useTranslation();
   const [stage, setStage] = useState<Stage>('generating-prompts');
   const [progress, setProgress] = useState<string>('');
   const [error, setError] = useState<string | null>(null);
@@ -35,45 +37,45 @@ export const VideoGeneration: React.FC<VideoGenerationProps> = ({ storyText, dur
       try {
         const workflow = new VideoGenerationWorkflow(useFreeModels);
 
-        // Генерация промптов
+        // Generate prompts
         setStage('generating-prompts');
-        setProgress('Создание промптов для видео...');
+        setProgress(t('generation.title'));
         const prompts = await workflow.generateVideoPrompts(storyText, duration);
-        console.log(`\n✅ Создано ${prompts.length} промптов\n`);
+        console.log(`\n✅ Created ${prompts.length} prompts\n`);
 
-        // Генерация видео И аудио параллельно
+        // Generate videos AND audio in parallel
         setStage('generating-videos');
-        setProgress(`Параллельная генерация ${prompts.length} видео и озвучки...`);
+        setProgress(`Parallel generation of ${prompts.length} videos and audio...`);
 
         const [videoPaths, audioPath] = await Promise.all([
-          // Генерация и скачивание видео (скачивание происходит автоматически после каждого видео)
+          // Generate and download videos (download happens automatically after each video)
           workflow.generateVideos(prompts, duration, aspectRatio, referenceImage, stylePrompt, (current, total) => {
-            setProgress(`Генерация и сохранение: ${current}/${total} видео завершено...`);
+            setProgress(`Generation and saving: ${current}/${total} videos completed...`);
           }),
-          // Генерация аудио параллельно
+          // Generate audio in parallel
           (async () => {
             setStage('generating-audio');
             const audio = await workflow.generateAudio(storyText, voiceId);
-            console.log(`\n✅ Озвучка создана: ${audio}\n`);
+            console.log(`\n✅ Audio created: ${audio}\n`);
             return audio;
           })(),
         ]);
 
-        console.log(`\n✅ Сгенерировано и сохранено ${videoPaths.length} видео и озвучка!\n`);
+        console.log(`\n✅ Generated and saved ${videoPaths.length} videos and audio!\n`);
 
-        // Склейка видео
+        // Merge videos
         setStage('merging-videos');
-        setProgress('Склейка видео в одно...');
+        setProgress('Merging videos into one...');
         const mergedVideoPath = await workflow.mergeVideos(videoPaths);
-        console.log(`\n✅ Видео склеено: ${mergedVideoPath}\n`);
+        console.log(`\n✅ Videos merged: ${mergedVideoPath}\n`);
 
-        // Добавление аудио
+        // Add audio
         setStage('adding-audio');
-        setProgress('Добавление озвучки к видео...');
+        setProgress('Adding audio to video...');
         const finalPath = await workflow.addAudioToVideo(mergedVideoPath, audioPath);
-        console.log(`\n✅ Финальное видео готово: ${finalPath}\n`);
+        console.log(`\n✅ Final video ready: ${finalPath}\n`);
 
-        // Показываем сводку сессии
+        // Show session summary
         workflow.getSession().printSummary();
 
         setFinalVideoPath(finalPath);
@@ -82,7 +84,7 @@ export const VideoGeneration: React.FC<VideoGenerationProps> = ({ storyText, dur
           onComplete();
         }, 1000);
       } catch (err) {
-        console.error('❌ Ошибка в workflow:', err);
+        console.error('❌ Workflow error:', err);
         setError(err instanceof Error ? err.message : 'Unknown error');
         setStage('error');
       }
@@ -108,7 +110,7 @@ export const VideoGeneration: React.FC<VideoGenerationProps> = ({ storyText, dur
   if (error) {
     return (
       <Box flexDirection="column">
-        <Text color="red">❌ Ошибка: {error}</Text>
+        <Text color="red">❌ {t('generation.error')} {error}</Text>
       </Box>
     );
   }
@@ -116,8 +118,8 @@ export const VideoGeneration: React.FC<VideoGenerationProps> = ({ storyText, dur
   if (stage === 'complete') {
     return (
       <Box flexDirection="column">
-        <Text color="green" bold>✅ Видео успешно создано!</Text>
-        <Text>📁 Файл: {finalVideoPath}</Text>
+        <Text color="green" bold>✅ {t('generation.complete')}</Text>
+        <Text>📁 {t('generation.file')} {finalVideoPath}</Text>
       </Box>
     );
   }
@@ -125,7 +127,7 @@ export const VideoGeneration: React.FC<VideoGenerationProps> = ({ storyText, dur
   return (
     <Box flexDirection="column">
       <Box marginBottom={1}>
-        <Text color="cyan" bold>🎬 Создание видео...</Text>
+        <Text color="cyan" bold>🎬 {t('generation.title')}</Text>
       </Box>
 
       <Box>
@@ -136,7 +138,7 @@ export const VideoGeneration: React.FC<VideoGenerationProps> = ({ storyText, dur
       </Box>
 
       <Box marginTop={1}>
-        <Text dimColor>Пожалуйста, подождите. Генерация видео может занять несколько минут.</Text>
+        <Text dimColor>{t('generation.wait')}</Text>
       </Box>
     </Box>
   );

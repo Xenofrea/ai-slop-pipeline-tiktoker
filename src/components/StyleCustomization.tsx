@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { Box, Text } from 'ink';
 import TextInput from 'ink-text-input';
 import SelectInput from 'ink-select-input';
+import { useTranslation } from 'react-i18next';
 import { StyleManager, StylePreset } from '../utils/style-manager';
 
 interface StyleCustomizationProps {
@@ -11,13 +12,14 @@ interface StyleCustomizationProps {
 type Mode = 'selecting' | 'entering-custom-prompt' | 'entering-custom-name';
 
 export const StyleCustomization: React.FC<StyleCustomizationProps> = ({ onComplete }) => {
+  const { t } = useTranslation();
   const [mode, setMode] = useState<Mode>('selecting');
   const [styles, setStyles] = useState<StylePreset[]>([]);
   const [customPrompt, setCustomPrompt] = useState('');
   const [customName, setCustomName] = useState('');
 
   useEffect(() => {
-    // Загружаем стили при монтировании компонента
+    // Load styles on component mount
     const loadedStyles = StyleManager.loadStyles();
     setStyles(loadedStyles);
   }, []);
@@ -46,34 +48,25 @@ export const StyleCustomization: React.FC<StyleCustomizationProps> = ({ onComple
   const handleCustomNameSubmit = (name: string) => {
     const trimmedName = name.trim();
     if (trimmedName) {
-      // Сохраняем стиль
+      // Save style
       StyleManager.addCustomStyle(trimmedName, customPrompt);
     }
     onComplete(customPrompt);
   };
 
-  const systemPrompt = `🎨 СИСТЕМНЫЙ ПРОМПТ ДЛЯ ГЕНЕРАЦИИ ИЗОБРАЖЕНИЙ:
-
-При генерации каждого изображения используется промпт из текста + стилевые инструкции.
-
-Базовый формат: "<описание сцены>, <ваш стиль>"
-
-Выберите предустановленный стиль или создайте свой.
-Кастомные стили сохраняются в файл styles.json`;
-
   if (mode === 'selecting') {
-    // Создаём список пунктов для выбора
+    // Create list items for selection
     const items = [
       {
-        label: '⏭️  Пропустить (без стиля)',
+        label: `⏭️  ${t('style.skip')}`,
         value: 'skip',
       },
       {
-        label: '✏️  Создать свой стиль',
+        label: `✏️  ${t('style.custom')}`,
         value: 'custom',
       },
       ...styles.map((style, index) => ({
-        label: `${index + 1}. ${style.name}`,
+        label: `${index + 1}. ${StyleManager.getStyleName(style)}`,
         value: `preset-${index}`,
         isPreset: true,
         prompt: style.prompt,
@@ -83,15 +76,15 @@ export const StyleCustomization: React.FC<StyleCustomizationProps> = ({ onComple
     return (
       <Box flexDirection="column">
         <Box marginBottom={1}>
-          <Text color="cyan">🎨 Кастомизация стиля изображений</Text>
+          <Text color="cyan">🎨 {t('style.title')}</Text>
         </Box>
 
         <Box flexDirection="column" marginBottom={1} paddingLeft={2}>
-          <Text dimColor>{systemPrompt}</Text>
+          <Text dimColor>{t('style.system_prompt')}</Text>
         </Box>
 
         <Box marginBottom={1}>
-          <Text color="yellow">📋 Доступные стили:</Text>
+          <Text color="yellow">📋 {t('style.available_styles')}</Text>
         </Box>
 
         {styles.length > 0 && (
@@ -99,7 +92,7 @@ export const StyleCustomization: React.FC<StyleCustomizationProps> = ({ onComple
             {styles.slice(0, 5).map((style, index) => (
               <Box key={index} marginBottom={0}>
                 <Text dimColor>
-                  {index + 1}. {style.name}: <Text italic>{style.prompt.substring(0, 50)}...</Text>
+                  {index + 1}. {StyleManager.getStyleName(style)}: <Text italic>{style.prompt.substring(0, 50)}...</Text>
                 </Text>
               </Box>
             ))}
@@ -120,17 +113,17 @@ export const StyleCustomization: React.FC<StyleCustomizationProps> = ({ onComple
     return (
       <Box flexDirection="column">
         <Box marginBottom={1}>
-          <Text color="cyan">🎨 Введите инструкции по стилю:</Text>
+          <Text color="cyan">🎨 {t('style.custom_prompt_title')}</Text>
         </Box>
         <Box marginBottom={1}>
-          <Text dimColor>Эти инструкции будут добавлены к каждому промпту для изображений</Text>
+          <Text dimColor>{t('style.custom_prompt_desc')}</Text>
         </Box>
         <Box marginBottom={1}>
-          <Text color="yellow">💡 Примеры:</Text>
+          <Text color="yellow">💡 {t('style.examples')}</Text>
           <Box paddingLeft={2} flexDirection="column">
-            <Text dimColor>anime style, Studio Ghibli aesthetic</Text>
-            <Text dimColor>photorealistic, cinematic, dramatic lighting</Text>
-            <Text dimColor>oil painting, impressionist, soft brushstrokes</Text>
+            <Text dimColor>{t('style.example_1')}</Text>
+            <Text dimColor>{t('style.example_2')}</Text>
+            <Text dimColor>{t('style.example_3')}</Text>
           </Box>
         </Box>
         <Box>
@@ -139,7 +132,7 @@ export const StyleCustomization: React.FC<StyleCustomizationProps> = ({ onComple
             value={customPrompt}
             onChange={setCustomPrompt}
             onSubmit={handleCustomPromptSubmit}
-            placeholder="Введите стиль..."
+            placeholder={t('style.custom_prompt_placeholder')}
           />
         </Box>
       </Box>
@@ -150,13 +143,13 @@ export const StyleCustomization: React.FC<StyleCustomizationProps> = ({ onComple
   return (
     <Box flexDirection="column">
       <Box marginBottom={1}>
-        <Text color="cyan">💾 Сохранить этот стиль?</Text>
+        <Text color="cyan">💾 {t('style.save_title')}</Text>
       </Box>
       <Box marginBottom={1}>
-        <Text dimColor>Введите название для стиля (или оставьте пустым для пропуска):</Text>
+        <Text dimColor>{t('style.save_desc')}</Text>
       </Box>
       <Box marginBottom={1}>
-        <Text color="yellow">Ваш стиль:</Text>
+        <Text color="yellow">{t('style.your_style')}</Text>
         <Text dimColor> {customPrompt}</Text>
       </Box>
       <Box>
@@ -165,7 +158,7 @@ export const StyleCustomization: React.FC<StyleCustomizationProps> = ({ onComple
           value={customName}
           onChange={setCustomName}
           onSubmit={handleCustomNameSubmit}
-          placeholder="Название стиля (опционально)..."
+          placeholder={t('style.save_placeholder')}
         />
       </Box>
     </Box>
