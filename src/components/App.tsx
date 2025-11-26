@@ -9,9 +9,11 @@ import { ReferenceImageSelector } from './ReferenceImageSelector';
 import { StyleCustomization } from './StyleCustomization';
 import { VoiceSelector } from './VoiceSelector';
 import { VideoGeneration } from './VideoGeneration';
+import { StepsReview } from './StepsReview';
 import { TextGenerationResult } from '../api/text-generator-client';
+import { VideoStep } from '../types/video-step';
 
-type Step = 'input' | 'selecting-duration' | 'selecting-aspect' | 'selecting-variant' | 'selecting-reference' | 'customizing-style' | 'selecting-voice' | 'generating-videos' | 'done';
+type Step = 'input' | 'selecting-duration' | 'selecting-aspect' | 'selecting-variant' | 'selecting-reference' | 'customizing-style' | 'selecting-voice' | 'reviewing-steps' | 'generating-videos' | 'done';
 
 interface AppProps {
   useFreeModels?: boolean;
@@ -29,6 +31,7 @@ export const App: React.FC<AppProps> = ({ useFreeModels = false, onExit }) => {
   const [referenceImage, setReferenceImage] = useState<string | null>(null);
   const [stylePrompt, setStylePrompt] = useState<string>('');
   const [voiceId, setVoiceId] = useState<string>('3EuKHIEZbSzrHGNmdYsx'); // Default: Josh
+  const [videoSteps, setVideoSteps] = useState<VideoStep[]>([]);
 
   const handleDescriptionSubmit = (value: string) => {
     setDescription(value);
@@ -62,6 +65,11 @@ export const App: React.FC<AppProps> = ({ useFreeModels = false, onExit }) => {
 
   const handleVoiceSelect = (selectedVoiceId: string) => {
     setVoiceId(selectedVoiceId);
+    setStep('reviewing-steps');
+  };
+
+  const handleStepsReviewComplete = (steps: VideoStep[]) => {
+    setVideoSteps(steps);
     setStep('generating-videos');
   };
 
@@ -127,6 +135,18 @@ export const App: React.FC<AppProps> = ({ useFreeModels = false, onExit }) => {
         <VoiceSelector onSelect={handleVoiceSelect} />
       )}
 
+      {step === 'reviewing-steps' && selectedVariant && (
+        <StepsReview
+          storyText={selectedVariant.text}
+          duration={duration}
+          aspectRatio={aspectRatio}
+          referenceImage={referenceImage}
+          stylePrompt={stylePrompt}
+          useFreeModels={useFreeModels}
+          onComplete={handleStepsReviewComplete}
+        />
+      )}
+
       {step === 'generating-videos' && selectedVariant && (
         <VideoGeneration
           storyText={selectedVariant.text}
@@ -135,6 +155,7 @@ export const App: React.FC<AppProps> = ({ useFreeModels = false, onExit }) => {
           referenceImage={referenceImage}
           stylePrompt={stylePrompt}
           voiceId={voiceId}
+          videoSteps={videoSteps}
           useFreeModels={useFreeModels}
           onComplete={handleComplete}
         />

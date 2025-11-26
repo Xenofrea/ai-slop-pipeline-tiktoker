@@ -22,6 +22,19 @@ export class TextGeneratorClient {
     console.log(`📝 Using text model: ${this.model}${useFreeModel ? ' (FREE)' : ''}`);
   }
 
+  private detectLanguage(text: string): 'ru' | 'en' {
+    // Simple Cyrillic detection
+    const cyrillicPattern = /[\u0400-\u04FF]/;
+    return cyrillicPattern.test(text) ? 'ru' : 'en';
+  }
+
+  private getLanguageInstructions(language: 'ru' | 'en'): string {
+    if (language === 'ru') {
+      return 'Пиши историю на русском языке';
+    }
+    return 'Write the story in English';
+  }
+
   async generateStoryVariants(description: string, duration: number = 60): Promise<TextGenerationResult[]> {
     const startTime = Date.now();
 
@@ -30,6 +43,11 @@ export class TextGeneratorClient {
     console.log('='.repeat(60));
     console.log('📥 Description:', description);
     console.log('⏱️  Duration:', duration, 'seconds');
+
+    // Detect language from description
+    const language = this.detectLanguage(description);
+    const languageInstruction = this.getLanguageInstructions(language);
+    console.log('🌐 Detected language:', language);
 
     // Calculate word count (150 words per minute)
     const wordsCount = Math.floor((duration / 60) * 150);
@@ -43,7 +61,7 @@ REQUIREMENTS:
 - Use vivid visual imagery that can be easily conveyed in video
 - The text should be coherent and have a clear structure
 - Use dramatic structure: exposition, rising action, climax, resolution
-- Write the story in English
+- ${languageInstruction}
 
 RESPONSE FORMAT:
 Return only the clean story text, without additional explanations or markup.`;
@@ -146,5 +164,70 @@ PROMPT EXAMPLE:
     console.log('='.repeat(60) + '\n');
 
     return prompts;
+  }
+
+  async regenerateSingleVariant(description: string, duration: number, temperature: number = 0.9): Promise<string> {
+    const wordsCount = Math.floor((duration / 60) * 150);
+
+    // Detect language from description
+    const language = this.detectLanguage(description);
+    const languageInstruction = this.getLanguageInstructions(language);
+
+    const systemPrompt = `You are a creative screenwriter for short videos.
+Your task is to create an engaging story for a ${duration}-second video based on the user's description.
+
+REQUIREMENTS:
+- The text should be approximately ${duration} seconds of narration (about ${wordsCount} words)
+- The text should be dynamic, interesting, and suitable for a short video
+- Use vivid visual imagery that can be easily conveyed in video
+- The text should be coherent and have a clear structure
+- Use dramatic structure: exposition, rising action, climax, resolution
+- ${languageInstruction}
+
+RESPONSE FORMAT:
+Return only the clean story text, without additional explanations or markup.`;
+
+    const response = await this.client.chat.completions.create({
+      model: this.model,
+      messages: [{ role: 'system', content: systemPrompt }, { role: 'user', content: description }],
+      temperature,
+      max_tokens: 800,
+    });
+
+    return response.choices[0]?.message?.content?.trim() || '';
+  }
+
+  async modifyVariant(originalText: string, modificationPrompt: string, duration: number): Promise<string> {
+    const wordsCount = Math.floor((duration / 60) * 150);
+
+    // Detect language from original text
+    const language = this.detectLanguage(originalText);
+    const languageInstruction = this.getLanguageInstructions(language);
+
+    const systemPrompt = `You are a creative screenwriter for short videos.
+Your task is to modify an existing story based on the user's request.
+
+REQUIREMENTS:
+- The text should be approximately ${duration} seconds of narration (about ${wordsCount} words)
+- Keep the general structure and flow unless asked to change it
+- Apply the user's requested modifications
+- The text should remain dynamic, interesting, and suitable for a short video
+- Use vivid visual imagery that can be easily conveyed in video
+- ${languageInstruction}
+
+RESPONSE FORMAT:
+Return only the modified story text, without additional explanations or markup.`;
+
+    const response = await this.client.chat.completions.create({
+      model: this.model,
+      messages: [
+        { role: 'system', content: systemPrompt },
+        { role: 'user', content: `Original story:\n${originalText}\n\nModification request: ${modificationPrompt}` },
+      ],
+      temperature: 0.7,
+      max_tokens: 800,
+    });
+
+    return response.choices[0]?.message?.content?.trim() || '';
   }
 }

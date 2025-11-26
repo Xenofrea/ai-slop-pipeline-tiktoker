@@ -25,14 +25,16 @@ export interface Veo3Result {
 
 export class Veo3Client extends FalBaseClient {
   private isSeedanceModel: boolean;
+  private isHailuoModel: boolean;
 
   constructor(customApiKey?: string, useFreeModel: boolean = false) {
     const modelId = useFreeModel
-      ? (process.env.FAL_VIDEO_MODEL_FREE || 'fal-ai/bytedance/seedance/v1/lite/text-to-video')
+      ? (process.env.FAL_VIDEO_MODEL_FREE || 'fal-ai/minimax/hailuo-2.3-fast/standard/image-to-video')
       : (process.env.FAL_VIDEO_MODEL || 'fal-ai/veo3.1/fast/image-to-video');
 
     super(modelId, customApiKey);
     this.isSeedanceModel = modelId.includes('seedance');
+    this.isHailuoModel = modelId.includes('hailuo') || modelId.includes('minimax');
     console.log(`🎬 Using video model: ${modelId}${useFreeModel ? ' (FREE)' : ''}`);
   }
 
@@ -45,6 +47,7 @@ export class Veo3Client extends FalBaseClient {
 
     // Seedance model supports only 5s, 6s, 7s, 8s (minimum 5s)
     // Veo3 supports 4s, 6s, 8s (minimum 4s)
+    // Hailuo supports only 6s, 10s
     if (this.isSeedanceModel) {
       // If 4s - use 5s (minimum for Seedance)
       if (duration === '4s') {
@@ -52,6 +55,14 @@ export class Veo3Client extends FalBaseClient {
       } else {
         // Remove "s" for Seedance (e.g. "6s" -> "6")
         duration = duration.replace('s', '');
+      }
+    } else if (this.isHailuoModel) {
+      // Hailuo supports only 6s or 10s
+      if (duration === '8s') {
+        duration = '10';
+      } else {
+        // Map everything else to 6s
+        duration = '6';
       }
     }
 
@@ -64,10 +75,16 @@ export class Veo3Client extends FalBaseClient {
       duration,
     };
 
-    // Add Veo3-specific parameters
-    if (!this.isSeedanceModel) {
+    // Add model-specific parameters
+    if (!this.isSeedanceModel && !this.isHailuoModel) {
+      // Veo3-specific parameters
       requestPayload.resolution = '720p';
       requestPayload.generate_audio = false;
+      if (aspectRatio) {
+        requestPayload.aspect_ratio = aspectRatio;
+      }
+    } else if (this.isHailuoModel) {
+      // Hailuo supports aspect_ratio
       if (aspectRatio) {
         requestPayload.aspect_ratio = aspectRatio;
       }
@@ -98,7 +115,10 @@ export class Veo3Client extends FalBaseClient {
     if (requestPayload.generate_audio !== undefined) {
       console.log('   🔊 Generate Audio:', requestPayload.generate_audio);
     }
-    console.log('   🤖 Model:', this.isSeedanceModel ? 'Seedance (FREE)' : 'Veo 3.1');
+    const modelName = this.isHailuoModel ? 'Hailuo 2.3 (FREE)' :
+                      this.isSeedanceModel ? 'Seedance (FREE)' :
+                      'Veo 3.1';
+    console.log('   🤖 Model:', modelName);
     console.log('   🔧 FULL REQUEST PAYLOAD:');
     console.log(JSON.stringify(requestPayload, null, 2));
 

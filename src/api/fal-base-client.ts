@@ -163,4 +163,8 @@ export class FalBaseClient {
     console.log(`⏱️ Job timeout after ${maxAttempts * delayMs / 1000} seconds`)
     throw new Error('Job timeout');
   }
+
+  getModelId(): string {
+    return this.modelId;
+  }
 }

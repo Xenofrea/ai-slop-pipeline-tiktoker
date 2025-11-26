@@ -39,7 +39,16 @@
     "error": "Error:",
     "custom_mode_title": "Enter your text for the video:",
     "custom_mode_desc": "Write the story you want to turn into a video",
-    "custom_mode_placeholder": "Enter text..."
+    "custom_mode_placeholder": "Enter text...",
+    "options": "Options",
+    "select_action": "Select action:",
+    "use_variant": "Use this variant",
+    "edit_text": "Edit text directly",
+    "modify_prompt": "Modify with prompt",
+    "regenerate_variant": "Regenerate this variant",
+    "back": "Back to list",
+    "regenerate_all": "Regenerate all variants",
+    "regenerate_all_desc": "Create 3 new text variants"
   },
   "reference": {
     "title": "Reference image (optional):",
@@ -87,6 +96,13 @@
     "error": "Error:",
     "complete": "Video successfully created!",
     "file": "File:"
+  },
+  "cost": {
+    "title": "Generation Cost",
+    "images": "Images",
+    "videos": "Videos",
+    "audio": "Audio",
+    "total": "TOTAL"
   },
   "done": {
     "message": "Done! Your video is ready.",

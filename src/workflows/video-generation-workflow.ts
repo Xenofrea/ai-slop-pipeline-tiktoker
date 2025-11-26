@@ -7,6 +7,8 @@ import { VideoDownloader } from '../utils/video-downloader';
 import { SessionManager } from '../utils/session-manager';
 import { ImageUploader } from '../utils/image-uploader';
 import { RetryHelper } from '../utils/retry-helper';
+import { VideoStep } from '../types/video-step';
+import { CostCalculator } from '../utils/cost-calculator';
 
 interface VideoGenerationResult {
   index: number;
@@ -25,6 +27,7 @@ export class VideoGenerationWorkflow {
   private videoDownloader: VideoDownloader;
   private session: SessionManager;
   private referenceImageUrl: string | null = null;
+  private costCalculator: CostCalculator;
 
   constructor(useFreeModels: boolean = false) {
     this.textGenerator = new TextGeneratorClient(useFreeModels);
@@ -34,6 +37,14 @@ export class VideoGenerationWorkflow {
     this.videoMerger = new VideoMerger();
     this.videoDownloader = new VideoDownloader();
     this.session = new SessionManager();
+
+    // Initialize cost calculator with current models
+    this.costCalculator = new CostCalculator(
+      this.veo3Client.getModelId(),
+      this.fluxClient.getModelId(),
+      'elevenlabs'
+    );
+
     this.session.printSummary();
   }
 
@@ -62,7 +73,8 @@ export class VideoGenerationWorkflow {
     aspectRatio: '16:9' | '9:16' = '9:16',
     referenceImagePath: string | null = null,
     stylePrompt: string = '',
-    onProgress?: (current: number, total: number) => void
+    onProgress?: (current: number, total: number) => void,
+    videoSteps?: VideoStep[]
   ): Promise<string[]> {
     const startTime = Date.now();
 
@@ -98,27 +110,53 @@ export class VideoGenerationWorkflow {
       console.log(`\n🎬 Starting video ${i + 1}/${prompts.length} generation...`);
       console.log(`📝 Prompt: ${prompt.substring(0, 80)}...`);
 
+      // Get custom duration if videoSteps provided
+      const customDuration = videoSteps?.[i]?.duration;
+      // Map custom duration to supported values: 4s, 5s, 6s, 8s
+      let stepVideoDuration: '4s' | '5s' | '6s' | '8s' | undefined = videoDuration as '4s' | '5s' | '6s' | '8s';
+      if (customDuration) {
+        if (customDuration <= 4) stepVideoDuration = '4s';
+        else if (customDuration <= 5) stepVideoDuration = '5s';
+        else if (customDuration <= 6) stepVideoDuration = '6s';
+        else stepVideoDuration = '8s';
+      }
+
       // Wrap in retry for error resilience
       try {
         return await RetryHelper.retry(
           async () => {
-            // First generate image from prompt and save it
-            const imagePath = this.session.getImagePath(i + 1);
-            const imageUrl = await this.fluxClient.generateImage(
-              prompt,
-              imagePath,
-              aspectRatio,
-              this.referenceImageUrl || undefined,
-              stylePrompt || undefined
-            );
+            let imageUrl: string;
+
+            // Use prepared image if available, otherwise generate new one
+            if (videoSteps?.[i]?.imageUrl) {
+              imageUrl = videoSteps[i].imageUrl!;
+              console.log(`✅ Using prepared image for video ${i + 1}`);
+              // Track image generation cost (image was generated earlier in StepsReview)
+              this.costCalculator.addImage(1);
+            } else {
+              // Generate image from prompt and save it
+              const imagePath = this.session.getImagePath(i + 1);
+              imageUrl = await this.fluxClient.generateImage(
+                prompt,
+                imagePath,
+                aspectRatio,
+                this.referenceImageUrl || undefined,
+                stylePrompt || undefined
+              );
+              // Track image generation cost
+              this.costCalculator.addImage(1);
+            }
 
             // Then generate video from image
             const result = await this.veo3Client.generateVideo(
               prompt,
               imageUrl,
-              videoDuration,
+              stepVideoDuration,
               aspectRatio
             );
+
+            // Track video generation cost
+            this.costCalculator.addVideo(1);
 
             console.log(`✅ Video ${i + 1} generated: ${result.videoUrl}`);
 
@@ -243,6 +281,9 @@ export class VideoGenerationWorkflow {
     const totalTime = ((Date.now() - startTime) / 1000).toFixed(1);
     console.log(`⏱️  Audio generation time: ${totalTime}s`);
 
+    // Track audio generation cost
+    this.costCalculator.addAudio(text.length);
+
     // Return actual audio file path
     return result.audioPath;
   }
@@ -316,10 +357,17 @@ export class VideoGenerationWorkflow {
     console.log(`⏱️  Total execution time: ${totalWorkflowTime}s (${(parseFloat(totalWorkflowTime) / 60).toFixed(1)} min)`);
     console.log('='.repeat(60) + '\n');
 
+    // Print cost breakdown
+    this.costCalculator.printCostBreakdown();
+
     return finalVideoPath;
   }
 
   getSession(): SessionManager {
     return this.session;
+  }
+
+  getCostCalculator(): CostCalculator {
+    return this.costCalculator;
   }
 }

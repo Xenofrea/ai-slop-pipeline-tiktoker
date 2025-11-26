@@ -9,6 +9,9 @@ import i18n from './i18n/config';
 // Load environment variables
 dotenv.config();
 
+// Clear console for clean output
+console.clear();
+
 // Parse command line arguments
 const args = process.argv.slice(2);
 const useFreeModels = args.includes('--free');

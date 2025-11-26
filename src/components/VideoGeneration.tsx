@@ -3,6 +3,8 @@ import { Box, Text } from 'ink';
 import Spinner from 'ink-spinner';
 import { useTranslation } from 'react-i18next';
 import { VideoGenerationWorkflow } from '../workflows/video-generation-workflow';
+import { VideoStep } from '../types/video-step';
+import { CostBreakdown } from '../utils/cost-calculator';
 
 interface VideoGenerationProps {
   storyText: string;
@@ -11,6 +13,7 @@ interface VideoGenerationProps {
   referenceImage: string | null;
   stylePrompt: string;
   voiceId: string;
+  videoSteps?: VideoStep[];
   useFreeModels?: boolean;
   onComplete: () => void;
 }
@@ -25,23 +28,32 @@ type Stage =
   | 'complete'
   | 'error';
 
-export const VideoGeneration: React.FC<VideoGenerationProps> = ({ storyText, duration, aspectRatio, referenceImage, stylePrompt, voiceId, useFreeModels = false, onComplete }) => {
+export const VideoGeneration: React.FC<VideoGenerationProps> = ({ storyText, duration, aspectRatio, referenceImage, stylePrompt, voiceId, videoSteps, useFreeModels = false, onComplete }) => {
   const { t } = useTranslation();
-  const [stage, setStage] = useState<Stage>('generating-prompts');
+  const [stage, setStage] = useState<Stage>(videoSteps ? 'generating-videos' : 'generating-prompts');
   const [progress, setProgress] = useState<string>('');
   const [error, setError] = useState<string | null>(null);
   const [finalVideoPath, setFinalVideoPath] = useState<string>('');
+  const [costBreakdown, setCostBreakdown] = useState<CostBreakdown | null>(null);
 
   useEffect(() => {
     const runWorkflow = async () => {
       try {
         const workflow = new VideoGenerationWorkflow(useFreeModels);
 
-        // Generate prompts
-        setStage('generating-prompts');
-        setProgress(t('generation.title'));
-        const prompts = await workflow.generateVideoPrompts(storyText, duration);
-        console.log(`\n✅ Created ${prompts.length} prompts\n`);
+        let prompts: string[];
+
+        // If we have videoSteps, use them; otherwise generate prompts
+        if (videoSteps && videoSteps.length > 0) {
+          prompts = videoSteps.map(step => step.prompt);
+          console.log(`\n✅ Using ${prompts.length} prepared steps\n`);
+        } else {
+          // Generate prompts
+          setStage('generating-prompts');
+          setProgress(t('generation.title'));
+          prompts = await workflow.generateVideoPrompts(storyText, duration);
+          console.log(`\n✅ Created ${prompts.length} prompts\n`);
+        }
 
         // Generate videos AND audio in parallel
         setStage('generating-videos');
@@ -49,9 +61,17 @@ export const VideoGeneration: React.FC<VideoGenerationProps> = ({ storyText, dur
 
         const [videoPaths, audioPath] = await Promise.all([
           // Generate and download videos (download happens automatically after each video)
-          workflow.generateVideos(prompts, duration, aspectRatio, referenceImage, stylePrompt, (current, total) => {
-            setProgress(`Generation and saving: ${current}/${total} videos completed...`);
-          }),
+          workflow.generateVideos(
+            prompts,
+            duration,
+            aspectRatio,
+            referenceImage,
+            stylePrompt,
+            (current, total) => {
+              setProgress(`Generation and saving: ${current}/${total} videos completed...`);
+            },
+            videoSteps // Pass videoSteps to use prepared images
+          ),
           // Generate audio in parallel
           (async () => {
             setStage('generating-audio');
@@ -77,6 +97,14 @@ export const VideoGeneration: React.FC<VideoGenerationProps> = ({ storyText, dur
 
         // Show session summary
         workflow.getSession().printSummary();
+
+        // Get cost breakdown
+        const costCalc = workflow.getCostCalculator();
+        const breakdown = costCalc.calculateCost();
+        setCostBreakdown(breakdown);
+
+        // Print cost breakdown to console
+        costCalc.printCostBreakdown();
 
         setFinalVideoPath(finalPath);
         setStage('complete');
@@ -120,6 +148,37 @@ export const VideoGeneration: React.FC<VideoGenerationProps> = ({ storyText, dur
       <Box flexDirection="column">
         <Text color="green" bold>✅ {t('generation.complete')}</Text>
         <Text>📁 {t('generation.file')} {finalVideoPath}</Text>
+
+        {costBreakdown && (
+          <Box flexDirection="column" marginTop={1} borderStyle="round" borderColor="yellow" padding={1}>
+            <Text color="cyan" bold>💰 {t('cost.title')}</Text>
+
+            {costBreakdown.details.images.count > 0 && (
+              <Box marginTop={1}>
+                <Text dimColor>🖼️  {t('cost.images')}: </Text>
+                <Text color="yellow">{costBreakdown.details.images.count} × ${costBreakdown.imageGeneration.toFixed(4)}</Text>
+              </Box>
+            )}
+
+            {costBreakdown.details.videos.count > 0 && (
+              <Box marginTop={1}>
+                <Text dimColor>🎬 {t('cost.videos')}: </Text>
+                <Text color="yellow">{costBreakdown.details.videos.count} × ${costBreakdown.videoGeneration.toFixed(4)}</Text>
+              </Box>
+            )}
+
+            {costBreakdown.details.audio.characters > 0 && (
+              <Box marginTop={1}>
+                <Text dimColor>🔊 {t('cost.audio')}: </Text>
+                <Text color="yellow">{costBreakdown.details.audio.characters} chars × ${costBreakdown.audioGeneration.toFixed(4)}</Text>
+              </Box>
+            )}
+
+            <Box marginTop={1}>
+              <Text color="green" bold>💵 {t('cost.total')}: ${costBreakdown.total.toFixed(4)}</Text>
+            </Box>
+          </Box>
+        )}
       </Box>
     );
   }
